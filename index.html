@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<!-- saved from url=(0033)http://grabthesquare.appspot.com/ -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-2">
+		<script>
+			var s=25;
+			var cel ={ x:0, y:0, s:25, 
+				fillStyle : "rgba("+Math.floor(Math.random()*192)+","+Math.floor(Math.random()*255)+","+Math.floor(Math.random()*192)+",1.0)",
+				borderStyle : "#000" };
+		
+			function Ball(){
+				this.x=0;
+				this.y=0;
+				this.vx=0;
+				this.vy=0;
+				this.ax=0;
+				this.ay=0;
+				this.fillStyle = "rgba(127,127,127,1.0)";
+				this.strokeStyle = "rgba(127,127,127,1.0)";
+				this.points = 0;
+			}
+			Ball.prototype.move = function(){
+				this.vx+=this.ax;
+				this.vy+=this.ay;
+				this.x+=this.vx;
+				this.y+=this.vy;
+				this.vx -= this.vx * Math.abs(this.vx)/2000;
+				this.vy -= this.vy * Math.abs(this.vy)/2000;
+			}
+			Ball.prototype.walls = function(rect){
+				if(this.x<s){
+					this.x = 2*s-this.x;
+					this.vx = - this.vx*0.8;
+				}
+				if(this.y<s){
+					this.y = 2*s-this.y;
+					this.vy = - this.vy*0.8;
+				}
+				if(this.x > rect.width-s){
+					this.x = 2*(rect.width-s)-this.x;
+					this.vx = - this.vx*0.8;
+				}
+				if(this.y > rect.height-s){
+					this.y = 2*(rect.height-s)-this.y;
+					this.vy = - this.vy*0.8;
+				}
+			}
+			Ball.prototype.draw = function(ctx){
+				ctx.beginPath();
+				ctx.arc(this.x, this.y, s, 0, 2 * Math.PI, false);
+				ctx.fillStyle = this.fillStyle;
+				ctx.fill();
+				ctx.lineWidth = 2;
+				ctx.strokeStyle = this.strokeStyle;
+				ctx.stroke();
+				
+				ctx.beginPath();
+				ctx.arc(this.x, this.y, 1, 0, 2 * Math.PI, false);
+				ctx.fillStyle = this.fillStyle;
+				ctx.fill();
+				ctx.lineWidth = 2;
+				ctx.strokeStyle = this.strokeStyle;
+				ctx.stroke();
+			}
+			Ball.prototype.score = function(ctx){
+				if(this.x<cel.x){
+					if(this.y<cel.y){
+						var x = cel.x;
+						var y = cel.y;
+						if((this.x-x)*(this.x-x)+(this.y-y)*(this.y-y)<=s*s) return true;
+					}
+					if(this.y>=cel.y && this.y<=cel.y+cel.s){
+						if(this.x+s>=cel.x) return true;
+					}
+					if(this.y>cel.y+cel.s){
+						var x = cel.x;
+						var y = cel.y+cel.s;
+						if((this.x-x)*(this.x-x)+(this.y-y)*(this.y-y)<=s*s) return true;
+					}
+				}
+				if(this.x>=cel.x && this.x<=cel.x+cel.s){
+					if(this.y<cel.y){
+						if(this.y+s>=cel.y) return true;
+					}
+					if(this.y>=cel.y && this.y<=cel.y+cel.s){
+						return true;
+					}
+					if(this.y>cel.y+cel.s){
+						if(this.y-s<=cel.y+cel.s) return true;
+					}
+				}
+				if(this.x>cel.x+cel.s){
+					if(this.y<cel.y){
+						var x = cel.x+cel.s;
+						var y = cel.y;
+						if((this.x-x)*(this.x-x)+(this.y-y)*(this.y-y)<=s*s) return true;
+					}
+					if(this.y>=cel.y && this.y<=cel.y+cel.s){
+						if(this.x-s<=cel.x+cel.s) return true;
+					}
+					if(this.y>cel.y+cel.s){
+						var x = cel.x+cel.s;
+						var y = cel.y+cel.s;
+						if((this.x-x)*(this.x-x)+(this.y-y)*(this.y-y)<=s*s) return true;
+					}
+				}
+				
+				return false;
+			}
+			
+			var p1 = new Ball();
+			var p2 = new Ball();
+			
+			function go(evt){
+			
+				var p1s = document.getElementById("p1s");
+				var p2s = document.getElementById("p2s");
+				var can = document.getElementById("can");
+				var ctx = can.getContext("2d");
+				var rect = can.getBoundingClientRect();
+				can.width = can.width;
+				var hit = false;
+				
+				
+				var grd=ctx.createLinearGradient(0,0,can.width/2,can.height);
+				grd.addColorStop(0,"#ee4");
+				grd.addColorStop(0.5,"#aaf");
+				grd.addColorStop(1,"#8e8");
+				ctx.fillStyle=grd;
+				ctx.fillRect(0,0,can.width,can.height);
+				
+				ctx.strokeStyle = cel.borderStyle;
+				ctx.lineWidth = 2.5;
+				ctx.rect(cel.x, cel.y,cel.s, cel.s );
+				ctx.stroke();
+				ctx.fillStyle = cel.fillStyle;
+				ctx.fillRect( cel.x, cel.y, cel.s, cel.s );
+				
+				if((p1.x-p2.x)*(p1.x-p2.x)+(p1.y-p2.y)*(p1.y-p2.y)<=4*s*s){
+					
+					if((p1.x-p2.x)!=0 && (p1.y-p2.y)!=0){
+						var ax=p1.x; var ay=p1.y;
+						var bx=p2.x; var by=p2.y;
+						var v1x=p1.vx; var v1y=p1.vy;
+						var v2x=p2.vx; var v2y=p2.vy;
+
+						var aa=(ay-by)/(ax-bx);
+						var b=ay-aa*ax;
+						var c=-1/aa;
+						var px=ax+v1x-v2x;
+						var py=ay+v1y-v2y;
+						var d=py-px*c;
+						var rx=(d-b)/(aa-c);
+						var ry=c*rx+d;
+						var fx=rx-ax;
+						var fy=ry-ay;
+
+						p1.vx=p1.vx-fx;  p1.vy=p1.vy-fy;
+						p2.vx=p2.vx+fx;  p2.vy=p2.vy+fy;
+						
+						while((p1.x-p2.x)*(p1.x-p2.x)+(p1.y-p2.y)*(p1.y-p2.y)<=4*s*s){
+							p1.x += (p1.x-p2.x)/1000;
+							p2.x -= (p1.x-p2.x)/1000;
+							p1.y += (p1.y-p2.y)/1000;
+							p2.y -= (p1.y-p2.y)/1000;
+						}
+						
+					} else { // zderzenie w pionie
+						if(p1.x-p2.x==0){
+							var vy = p1.vy;
+							p1.vy = p2.vy;
+							p2.vy = vy;
+							while((p1.y-p2.y)*(p1.y-p2.y)<=4*s*s){
+								p1.y += (p1.y-p2.y)/1000;
+								p2.y -= (p1.y-p2.y)/1000;
+							}
+						}
+						if(p1.y-p2.y==0){
+							var vx = p1.vx;
+							p1.vx = p2.vx;
+							p2.vx = vx;
+							while((p1.x-p2.x)*(p1.x-p2.x)<=4*s*s){
+								p1.x += (p1.x-p2.x)/1000;
+								p2.x -= (p1.x-p2.x)/1000;
+							}
+						}
+					}
+				}
+				
+				p1.move();
+				p1.walls(can);
+				p1.draw(ctx);
+				if(p1.score()) {
+					p1.points++;
+					p1s.innerHTML = ""+p1.points;
+					hit = true;
+				}
+				
+				p2.move();
+				p2.walls(can);
+				p2.draw(ctx);
+				if(p2.score()) {
+					p2.points++;
+					p2s.innerHTML = ""+p2.points;
+					hit = true;
+				}
+				
+				
+				
+				if(hit){
+					var r = Math.floor(Math.random()*192);
+					var g = Math.floor(Math.random()*255);
+					var b = Math.floor(Math.random()*192);
+					cel.fillStyle = "rgba("+r+","+g+","+b+",1.0)";
+					cel.borderStyle = "rgba("+Math.floor(r/2)+","+Math.floor(g/2)+","+Math.floor(b/2)+",1.0)"
+					cel.x = Math.floor( Math.random()*(can.width-s));
+					cel.y = Math.floor( Math.random()*(can.height-s));
+				}
+			}
+			
+			function kdn(event) {
+				var keyCode = ('which' in event) ? event.which : event.keyCode;
+
+				if(keyCode==65) p1.ax=-1;
+				if(keyCode==68) p1.ax=1;
+				if(keyCode==87) p1.ay=-1;
+				if(keyCode==83) p1.ay=1;
+				
+				if(keyCode==37) p2.ax=-1;
+				if(keyCode==39) p2.ax=1;
+				if(keyCode==38) p2.ay=-1;
+				if(keyCode==40) p2.ay=1;
+			}
+			
+			function kup(event) {
+				var keyCode = ('which' in event) ? event.which : event.keyCode;
+				
+				if(keyCode==65) p1.ax=0;
+				if(keyCode==68) p1.ax=0;
+				if(keyCode==87) p1.ay=0;
+				if(keyCode==83) p1.ay=0;
+				
+				if(keyCode==37) p2.ax=0;
+				if(keyCode==39) p2.ax=0;
+				if(keyCode==38) p2.ay=0;
+				if(keyCode==40) p2.ay=0;
+				
+			}
+			
+		</script>
+	</head>
+
+
+	<body onkeydown="kdn(event)" onkeyup="kup(event)">
+		
+		<table><tbody><tr><td>
+		
+			<table width="20" height="600" border="5">
+				<tbody><tr style="color:#484; background-color:#8f8">
+					<td align="center"> 
+						<font size="5"><b><div id="title">
+							<table>
+								<tbody><tr><td align="center"> </td></tr>
+								<tr height="35"><td align="center">G</td></tr>
+								<tr height="35"><td align="center">r</td></tr>
+								<tr height="35"><td align="center">a</td></tr>
+								<tr height="35"><td align="center">b</td></tr>
+								<tr height="35"><td align="center"> </td></tr>
+								<tr height="35"><td align="center">T</td></tr>
+								<tr height="35"><td align="center">h</td></tr>
+								<tr height="35"><td align="center">e</td></tr>
+								<tr height="35"><td align="center"> </td></tr>
+								<tr height="35"><td align="center">S</td></tr>
+								<tr height="35"><td align="center">q</td></tr>
+								<tr height="35"><td align="center">u</td></tr>
+								<tr height="35"><td align="center">a</td></tr>
+								<tr height="35"><td align="center">r</td></tr>
+								<tr height="35"><td align="center">e</td></tr>
+							</tbody></table>
+						</div>
+					</b></font></td>
+				</tr>
+			</tbody></table>
+		
+		</td><td>
+		
+			<canvas id="can" width="800" height="600" style="border:1 solid #000000"></canvas>
+		
+		</td><td>
+		
+			<table height="600" border="5">
+				<tbody><tr>
+					<td align="center" height="50%" style="color:#840; background-color:#f80"> 
+						<font size="20"><b><div id="p1s">0</div>
+					</b></font></td></tr><tr>
+					<td align="center" height="50%" style="color:#048; background-color:#08f"> 
+						<font size="20"><b><div id="p2s">0</div>
+					</b></font></td>
+				</tr>
+			</tbody></table>
+		
+		</td></tr></tbody></table>
+
+	
+
+	<script>
+		
+		window.setInterval("go();",50);
+		var can = document.getElementById('can');
+		p1.x = can.width/3;
+		p1.y = can.height/2;
+		p1.fillStyle = "rgba(255,127,0,0.5)";
+		p1.strokeStyle = "rgba(127,63,0,1.0)";
+		p2.x = can.width/3*2;
+		p2.y = can.height/2;
+		p2.fillStyle = "rgba(0,127,255,0.5)";
+		p2.strokeStyle = "rgba(0,63,127,1.0)";
+		
+		cel.x = Math.floor( Math.random()*(can.width-s));
+		cel.y = Math.floor( Math.random()*(can.height-s));
+
+	</script>
+
+
+</body></html>
