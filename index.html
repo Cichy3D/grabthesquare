@@ -229,6 +229,7 @@
 				if(keyCode==39) p2.ax=1;
 				if(keyCode==38) p2.ay=-1;
 				if(keyCode==40) p2.ay=1;
+				consumeEvent(event);
 			}
 			
 			function kup(event) {
@@ -243,7 +244,15 @@
 				if(keyCode==39) p2.ax=0;
 				if(keyCode==38) p2.ay=0;
 				if(keyCode==40) p2.ay=0;
-				
+				consumeEvent(event);
+			}
+			
+			function consumeEvent(event){
+				if (typeof evt.stopPropagation != "undefined") {
+					evt.stopPropagation();
+				} else {
+					evt.cancelBubble = true;
+				}
 			}
 			
 		</script>
