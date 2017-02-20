@@ -247,7 +247,7 @@
 				consumeEvent(event);
 			}
 			
-			function consumeEvent(event){
+			function consumeEvent(evt){
 				if (typeof evt.stopPropagation != "undefined") {
 					evt.stopPropagation();
 				} else {
